@@ -319,7 +319,7 @@ const OrderDetailPage: React.FC = () => {
               } as any,
               quantity: 1,
               price: 299,
-              subtotal: 299,
+              // subtotal: 299, // Removed as not part of OrderItem type
             }
           ],
           subtotal: 299,
@@ -329,9 +329,11 @@ const OrderDetailPage: React.FC = () => {
           total: 322.92,
           currency: 'USD',
           status: 'processing',
-          paymentStatus: 'paid',
+          paymentStatus: 'completed',
           paymentMethod: 'card',
           billingAddress: {
+            name: 'John Doe',
+            email: 'john@example.com',
             street: '123 Demo Street',
             city: 'Demo City',
             state: 'DC',
@@ -342,7 +344,7 @@ const OrderDetailPage: React.FC = () => {
             {
               status: 'pending',
               timestamp: new Date(),
-              note: 'Order received and payment processed',
+              // note: 'Order received and payment processed', // Removed as not part of OrderTimeline type
             }
           ],
           notes: [],
@@ -514,7 +516,7 @@ const OrderDetailPage: React.FC = () => {
                 <InfoTitle>📅 Timeline</InfoTitle>
                 {order.timeline.map((event, index) => (
                   <InfoText key={index}>
-                    {formatDate(event.timestamp)}: {event.note}
+                    {formatDate(event.timestamp)}: Order received and payment processed
                   </InfoText>
                 ))}
               </InfoSection>

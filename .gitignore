@@ -108,3 +108,9 @@ frontend/.eslintcache
 
 # Docker
 docker-compose.override.yml
+
+# Clacky-related configuration
+.clackyai/
+.replit
+.upm/
+replit.nix

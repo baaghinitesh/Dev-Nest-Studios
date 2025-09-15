@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
 import { apiService } from '../services/api';
-import { useCart } from '../context/CartContext';
 
 // Styled Components
 const PageWrapper = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: ${props => props.theme.spacing.xl};
+  background: ${props => props.theme.colors.background.primary};
+  min-height: 100vh;
 `;
 
 const BackButton = styled(Link)`
@@ -21,7 +22,7 @@ const BackButton = styled(Link)`
   color: ${props => props.theme.colors.text.secondary};
   text-decoration: none;
   font-weight: ${props => props.theme.fonts.weights.medium};
-  transition: all 0.3s ease;
+  transition: ${props => props.theme.transitions.all};
   
   &:hover {
     color: ${props => props.theme.colors.primary.main};
@@ -34,20 +35,37 @@ const ProductContainer = styled(motion.div)`
   gap: ${props => props.theme.spacing.xl};
   margin-bottom: ${props => props.theme.spacing.xl};
   
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
+  @media (max-width: ${props => props.theme.breakpoints.lg}) {
     grid-template-columns: 1fr;
     gap: ${props => props.theme.spacing.lg};
   }
 `;
 
-const ImageSection = styled.div`
+const LeftSection = styled.div`
   position: relative;
 `;
 
+const RightSection = styled.div`
+  position: relative;
+`;
+
+// Image Gallery Section
+const ImageGallery = styled.div`
+  margin-bottom: ${props => props.theme.spacing.lg};
+`;
+
+const MainImageContainer = styled.div`
+  position: relative;
+  margin-bottom: ${props => props.theme.spacing.md};
+`;
+
 const MainImage = styled(motion.div)<{ bgImage?: string }>`
-  height: 400px;
+  height: 500px;
   border-radius: ${props => props.theme.borderRadius.lg};
-  background: ${props => props.bgImage ? `url(${props.bgImage})` : `linear-gradient(135deg, ${props.theme.colors.primary.light}, ${props.theme.colors.secondary.light})`};
+  background: ${props => props.bgImage ? 
+    `url(${props.bgImage})` : 
+    `${props.theme.colors.gradients.primary}`
+  };
   background-size: cover;
   background-position: center;
   display: flex;
@@ -55,65 +73,118 @@ const MainImage = styled(motion.div)<{ bgImage?: string }>`
   justify-content: center;
   color: white;
   font-size: 1.5rem;
-  box-shadow: ${props => props.theme.shadows.lg};
-  margin-bottom: ${props => props.theme.spacing.md};
+  box-shadow: ${props => props.theme.shadows.xl};
+  border: 1px solid ${props => props.theme.colors.border.light};
+  overflow: hidden;
+  position: relative;
+`;
+
+const ImageOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);
+`;
+
+const ProductTypeTag = styled.div`
+  position: absolute;
+  top: ${props => props.theme.spacing.md};
+  left: ${props => props.theme.spacing.md};
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fonts.sizes.sm};
+  font-weight: ${props => props.theme.fonts.weights.semibold};
+  text-transform: uppercase;
+  letter-spacing: 1px;
 `;
 
 const ThumbnailGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: ${props => props.theme.spacing.sm};
+  max-width: 100%;
 `;
 
 const Thumbnail = styled.div<{ bgImage?: string; active?: boolean }>`
-  height: 80px;
+  height: 100px;
   border-radius: ${props => props.theme.borderRadius.md};
-  background: ${props => props.bgImage ? `url(${props.bgImage})` : `linear-gradient(135deg, ${props.theme.colors.primary.light}, ${props.theme.colors.secondary.light})`};
+  background: ${props => props.bgImage ? 
+    `url(${props.bgImage})` : 
+    `${props.theme.colors.gradients.secondary}`
+  };
   background-size: cover;
   background-position: center;
   cursor: pointer;
-  border: 2px solid ${props => props.active ? props.theme.colors.primary.main : 'transparent'};
-  transition: all 0.3s ease;
+  border: 3px solid ${props => props.active ? props.theme.colors.primary.main : props.theme.colors.border.light};
+  transition: ${props => props.theme.transitions.all};
+  position: relative;
+  overflow: hidden;
   
   &:hover {
     border-color: ${props => props.theme.colors.primary.main};
     transform: scale(1.05);
+    box-shadow: ${props => props.theme.shadows.lg};
   }
 `;
 
-const ProductInfo = styled.div`
-  position: relative;
+// Product Info Section
+const ProductHeader = styled.div`
+  margin-bottom: ${props => props.theme.spacing.xl};
 `;
 
 const ProductBadges = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: ${props => props.theme.spacing.sm};
   margin-bottom: ${props => props.theme.spacing.md};
+  flex-wrap: wrap;
 `;
 
-const Badge = styled.span<{ type: 'featured' | 'new' | 'sale' }>`
-  padding: 0.375rem 0.75rem;
-  border-radius: ${props => props.theme.borderRadius.sm};
-  font-size: 0.875rem;
-  font-weight: ${props => props.theme.fonts.weights.medium};
+const Badge = styled.span<{ type: 'featured' | 'new' | 'sale' | 'popular' }>`
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fonts.sizes.sm};
+  font-weight: ${props => props.theme.fonts.weights.semibold};
   text-transform: uppercase;
+  letter-spacing: 0.5px;
   
   ${props => {
     switch (props.type) {
       case 'featured':
-        return `background: ${props.theme.colors.warning.main}; color: ${props.theme.colors.warning.dark};`;
+        return `
+          background: ${props.theme.colors.warning.main};
+          color: ${props.theme.colors.warning.dark};
+        `;
       case 'new':
-        return `background: ${props.theme.colors.success.main}; color: white;`;
+        return `
+          background: ${props.theme.colors.success.main};
+          color: white;
+        `;
       case 'sale':
-        return `background: ${props.theme.colors.error.main}; color: white;`;
+        return `
+          background: ${props.theme.colors.error.main};
+          color: white;
+        `;
+      case 'popular':
+        return `
+          background: ${props.theme.colors.info.main};
+          color: white;
+        `;
       default:
-        return `background: ${props.theme.colors.primary.main}; color: white;`;
+        return `
+          background: ${props.theme.colors.primary.main};
+          color: white;
+        `;
     }
   }}
 `;
 
 const ProductTitle = styled(motion.h1)`
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-size: clamp(2rem, 5vw, 3rem);
   font-weight: ${props => props.theme.fonts.weights.bold};
   color: ${props => props.theme.colors.text.primary};
   margin-bottom: ${props => props.theme.spacing.md};
@@ -125,20 +196,23 @@ const ProductMeta = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: ${props => props.theme.spacing.lg};
+  flex-wrap: wrap;
+  gap: ${props => props.theme.spacing.md};
 `;
 
 const Category = styled.span`
   background: ${props => props.theme.colors.primary.light}20;
   color: ${props => props.theme.colors.primary.main};
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   border-radius: ${props => props.theme.borderRadius.md};
-  font-weight: ${props => props.theme.fonts.weights.medium};
+  font-weight: ${props => props.theme.fonts.weights.semibold};
+  border: 2px solid ${props => props.theme.colors.primary.light}40;
 `;
 
 const Rating = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: ${props => props.theme.spacing.sm};
 `;
 
 const Stars = styled.div`
@@ -148,210 +222,222 @@ const Stars = styled.div`
 
 const RatingText = styled.span`
   color: ${props => props.theme.colors.text.secondary};
-  font-size: ${props => props.theme.fonts.sizes.sm};
+  font-weight: ${props => props.theme.fonts.weights.medium};
 `;
 
-const PriceSection = styled.div`
-  margin-bottom: ${props => props.theme.spacing.lg};
+const PriceSection = styled(motion.div)`
+  background: ${props => props.theme.colors.background.paper};
+  border: 2px solid ${props => props.theme.colors.border.light};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing.xl};
+  margin-bottom: ${props => props.theme.spacing.xl};
+  box-shadow: ${props => props.theme.shadows.md};
 `;
 
-const CurrentPrice = styled.div`
+const PriceContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.md};
+  margin-bottom: ${props => props.theme.spacing.md};
+`;
+
+const CurrentPrice = styled.span`
   font-size: 2.5rem;
   font-weight: ${props => props.theme.fonts.weights.bold};
   color: ${props => props.theme.colors.primary.main};
 `;
 
-const PriceRow = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: ${props => props.theme.spacing.md};
-`;
-
 const OriginalPrice = styled.span`
   font-size: 1.25rem;
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${props => props.theme.colors.text.muted};
   text-decoration: line-through;
 `;
 
-const Discount = styled.span`
-  background: ${props => props.theme.colors.error.main};
+const Savings = styled.span`
+  background: ${props => props.theme.colors.success.main};
   color: white;
-  padding: 0.25rem 0.5rem;
+  padding: 0.375rem 0.75rem;
   border-radius: ${props => props.theme.borderRadius.sm};
-  font-size: 0.875rem;
-  font-weight: ${props => props.theme.fonts.weights.medium};
+  font-size: ${props => props.theme.fonts.sizes.sm};
+  font-weight: ${props => props.theme.fonts.weights.semibold};
 `;
 
-const Description = styled.div`
-  margin-bottom: ${props => props.theme.spacing.lg};
-`;
-
-const ShortDescription = styled.p`
-  font-size: ${props => props.theme.fonts.sizes.lg};
-  color: ${props => props.theme.colors.text.primary};
-  font-weight: ${props => props.theme.fonts.weights.medium};
+const PriceNote = styled.p`
+  color: ${props => props.theme.colors.text.secondary};
+  font-style: italic;
   margin-bottom: ${props => props.theme.spacing.md};
 `;
 
-const FullDescription = styled.p`
-  color: ${props => props.theme.colors.text.secondary};
-  line-height: 1.6;
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: ${props => props.theme.spacing.md};
-  margin-bottom: ${props => props.theme.spacing.xl};
-  
-  @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    flex-direction: column;
-  }
-`;
-
-const AddToCartButton = styled(motion.button)`
-  flex: 2;
-  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
-  background: ${props => props.theme.colors.primary.main};
-  color: white;
-  border: none;
+const CustomizationNote = styled.div`
+  background: ${props => props.theme.colors.info.light}20;
+  border: 2px solid ${props => props.theme.colors.info.light};
   border-radius: ${props => props.theme.borderRadius.md};
-  font-size: ${props => props.theme.fonts.sizes.lg};
-  font-weight: ${props => props.theme.fonts.weights.semibold};
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: ${props => props.theme.colors.primary.dark};
-    transform: translateY(-2px);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
+  padding: ${props => props.theme.spacing.lg};
+  margin-bottom: ${props => props.theme.spacing.lg};
+  color: ${props => props.theme.colors.info.dark};
 `;
 
-const SecondaryButton = styled(motion.button)`
-  flex: 1;
-  padding: ${props => props.theme.spacing.md};
-  background: transparent;
-  color: ${props => props.theme.colors.text.primary};
-  border: 2px solid ${props => props.theme.colors.border.main};
-  border-radius: ${props => props.theme.borderRadius.md};
-  font-size: ${props => props.theme.fonts.sizes.body};
-  font-weight: ${props => props.theme.fonts.weights.medium};
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: ${props => props.theme.colors.background.secondary};
-    transform: translateY(-2px);
-  }
-`;
-
-const QuickInfo = styled.div`
+// Action Buttons
+const ActionButtonsContainer = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: ${props => props.theme.spacing.md};
-  padding: ${props => props.theme.spacing.lg};
-  background: ${props => props.theme.colors.background.secondary};
-  border-radius: ${props => props.theme.borderRadius.lg};
   margin-bottom: ${props => props.theme.spacing.xl};
 `;
 
-const InfoItem = styled.div`
-  text-align: center;
-`;
-
-const InfoLabel = styled.div`
-  font-size: ${props => props.theme.fonts.sizes.sm};
-  color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: 0.25rem;
-`;
-
-const InfoValue = styled.div`
-  font-weight: ${props => props.theme.fonts.weights.semibold};
-  color: ${props => props.theme.colors.text.primary};
-`;
-
-const TabsSection = styled.div`
-  margin-top: ${props => props.theme.spacing.xl};
-`;
-
-const TabsList = styled.div`
-  display: flex;
-  border-bottom: 2px solid ${props => props.theme.colors.border.light};
-  margin-bottom: ${props => props.theme.spacing.lg};
-`;
-
-const Tab = styled.button<{ active?: boolean }>`
-  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
-  background: transparent;
+const ActionButton = styled(motion.button)<{ variant?: 'primary' | 'secondary' }>`
+  padding: ${props => props.theme.spacing.lg} ${props => props.theme.spacing.xl};
   border: none;
-  border-bottom: 2px solid ${props => props.active ? props.theme.colors.primary.main : 'transparent'};
-  color: ${props => props.active ? props.theme.colors.primary.main : props.theme.colors.text.secondary};
-  font-weight: ${props => props.theme.fonts.weights.medium};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  font-size: ${props => props.theme.fonts.sizes.lg};
+  font-weight: ${props => props.theme.fonts.weights.semibold};
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: ${props => props.theme.transitions.all};
+  position: relative;
+  overflow: hidden;
+  
+  ${props => props.variant === 'primary' ? `
+    background: ${props.theme.colors.primary.main};
+    color: white;
+    box-shadow: ${props.theme.shadows.lg};
+    
+    &:hover {
+      background: ${props.theme.colors.primary.dark};
+      transform: translateY(-3px);
+      box-shadow: ${props.theme.shadows.xl};
+    }
+  ` : `
+    background: ${props.theme.colors.primary.main};
+    color: white;
+    box-shadow: ${props.theme.shadows.md};
+    
+    &:hover {
+      background: ${props.theme.colors.primary.dark};
+      transform: translateY(-2px);
+    }
+  `}
+`;
+
+const DemoButton = styled.a`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${props => props.theme.spacing.sm};
+  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.xl};
+  background: ${props => props.theme.colors.background.paper};
+  border: 2px solid ${props => props.theme.colors.border.main};
+  color: ${props => props.theme.colors.text.primary};
+  text-decoration: none;
+  border-radius: ${props => props.theme.borderRadius.lg};
+  font-weight: ${props => props.theme.fonts.weights.semibold};
+  transition: ${props => props.theme.transitions.all};
+  width: 100%;
+  margin-bottom: ${props => props.theme.spacing.lg};
   
   &:hover {
-    color: ${props => props.theme.colors.primary.main};
+    border-color: ${props => props.theme.colors.primary.main};
+    background: ${props => props.theme.colors.primary.light}10;
+    transform: translateY(-2px);
   }
 `;
 
-const TabContent = styled(motion.div)`
-  min-height: 200px;
+// Description Section
+const DescriptionSection = styled.div`
+  background: ${props => props.theme.colors.background.paper};
+  border: 1px solid ${props => props.theme.colors.border.light};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing.xl};
+  margin-bottom: ${props => props.theme.spacing.xl};
 `;
 
-const FeaturesList = styled.div`
+const SectionTitle = styled.h2`
+  font-size: ${props => props.theme.fonts.sizes['2xl']};
+  font-weight: ${props => props.theme.fonts.weights.bold};
+  color: ${props => props.theme.colors.text.primary};
+  margin-bottom: ${props => props.theme.spacing.lg};
+  border-bottom: 2px solid ${props => props.theme.colors.border.light};
+  padding-bottom: ${props => props.theme.spacing.md};
+`;
+
+const DescriptionText = styled.div`
+  color: ${props => props.theme.colors.text.primary};
+  line-height: 1.7;
+  font-size: ${props => props.theme.fonts.sizes.lg};
+  
+  p {
+    margin-bottom: ${props => props.theme.spacing.md};
+  }
+  
+  ul {
+    margin-left: ${props => props.theme.spacing.lg};
+    margin-bottom: ${props => props.theme.spacing.md};
+  }
+  
+  li {
+    margin-bottom: ${props => props.theme.spacing.sm};
+  }
+`;
+
+// Features & Technologies
+const FeaturesGrid = styled.div`
   display: grid;
-  gap: ${props => props.theme.spacing.md};
+  grid-template-columns: 1fr 1fr;
+  gap: ${props => props.theme.spacing.xl};
+  margin-bottom: ${props => props.theme.spacing.xl};
+  
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: 1fr;
+  }
 `;
 
-const FeatureItem = styled.div<{ included?: boolean }>`
+const FeatureCard = styled.div`
+  background: ${props => props.theme.colors.background.paper};
+  border: 1px solid ${props => props.theme.colors.border.light};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing.xl};
+`;
+
+const FeatureList = styled.ul`
+  list-style: none;
+  padding: 0;
+`;
+
+const FeatureItem = styled.li`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.md};
-  padding: ${props => props.theme.spacing.md};
-  border-radius: ${props => props.theme.borderRadius.md};
-  background: ${props => props.included ? props.theme.colors.success.light + '20' : props.theme.colors.background.secondary};
-  opacity: ${props => props.included ? 1 : 0.6};
+  gap: ${props => props.theme.spacing.sm};
+  margin-bottom: ${props => props.theme.spacing.md};
+  color: ${props => props.theme.colors.text.primary};
+  
+  &:before {
+    content: '✅';
+    font-size: 1.2rem;
+  }
 `;
 
-const FeatureIcon = styled.div<{ included?: boolean }>`
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: ${props => props.included ? props.theme.colors.success.main : props.theme.colors.text.secondary};
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-`;
-
-const TechTags = styled.div`
+const TechStack = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: ${props => props.theme.spacing.sm};
 `;
 
 const TechTag = styled.span`
-  background: ${props => props.theme.colors.primary.light}20;
-  color: ${props => props.theme.colors.primary.main};
+  background: ${props => props.theme.colors.background.secondary};
+  color: ${props => props.theme.colors.text.primary};
+  border: 1px solid ${props => props.theme.colors.border.light};
   padding: 0.5rem 1rem;
   border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fonts.sizes.sm};
   font-weight: ${props => props.theme.fonts.weights.medium};
-  border: 1px solid ${props => props.theme.colors.primary.light};
 `;
 
+// Loading States
 const LoadingSpinner = styled(motion.div)`
   display: flex;
   align-items: center;
   justify-content: center;
   height: 400px;
-  font-size: ${props => props.theme.fonts.sizes.lg};
+  font-size: ${props => props.theme.fonts.sizes.xl};
   color: ${props => props.theme.colors.text.secondary};
 `;
 
@@ -359,18 +445,22 @@ const ErrorMessage = styled(motion.div)`
   text-align: center;
   padding: ${props => props.theme.spacing.xl};
   color: ${props => props.theme.colors.error.main};
+  background: ${props => props.theme.colors.error.light};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  margin: ${props => props.theme.spacing.xl} 0;
 `;
 
+// Main Component
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  // const { addItem } = useCart(); // Will be implemented later
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('features');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -381,36 +471,39 @@ const ProductDetailPage: React.FC = () => {
   const fetchProduct = async (productId: string) => {
     try {
       setLoading(true);
+      setError(null);
       const response = await apiService.products.getById(productId);
       if (response.data.success) {
         setProduct(response.data.data);
       } else {
         setError('Product not found');
       }
-    } catch (err) {
-      console.error('Error fetching product:', err);
-      setError('Failed to load product');
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setError('Failed to load product details');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddToCart = () => {
-    if (product) {
-      addToCart({
-        id: product._id,
-        title: product.title,
-        price: product.price,
-        image: product.images?.[0]?.url,
-        quantity: 1,
-      });
-      // You could show a success message here
+  const handleAddToCart = async () => {
+    if (!product) return;
+    
+    try {
+      setIsAddingToCart(true);
+      // Add to cart implementation will be added later
+      console.log('Adding to cart:', product._id);
+      // Could show success notification here
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} style={{ color: i < rating ? '#ffd700' : '#ddd', fontSize: '1.2rem' }}>★</span>
+      <span key={i} style={{ color: i < rating ? '#ffd700' : '#ddd', fontSize: '1.5rem' }}>★</span>
     ));
   };
 
@@ -432,9 +525,19 @@ const ProductDetailPage: React.FC = () => {
     return product.originalPrice && product.originalPrice > product.price;
   };
 
-  const getDiscountPercentage = (product: Product) => {
-    if (!hasDiscount(product)) return 0;
-    return Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100);
+  const getProductTypeTag = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'Web Applications': '🌐 Website',
+      'Mobile Apps': '📱 App',
+      'E-commerce': '🛒 Store',
+      'Landing Pages': '📄 Landing',
+      'Backend APIs': '⚡ API',
+      'UI/UX Design': '🎨 Design',
+      'Custom Development': '⚙️ Service',
+      'Consulting': '💡 Service',
+      'AI Agent': '🤖 AI Agent',
+    };
+    return categoryMap[category] || '📦 Product';
   };
 
   if (loading) {
@@ -457,20 +560,33 @@ const ProductDetailPage: React.FC = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <h2>Product Not Found</h2>
-          <p>{error || 'The product you are looking for does not exist.'}</p>
-          <SecondaryButton onClick={() => navigate('/products')}>
+          <h2>Oops! {error || 'Product not found'}</h2>
+          <p>The product you're looking for doesn't exist or has been removed.</p>
+          <button 
+            onClick={() => navigate('/products')}
+            style={{ 
+              marginTop: '1rem',
+              padding: '0.5rem 1rem',
+              background: 'var(--primary-color)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.5rem',
+              cursor: 'pointer'
+            }}
+          >
             ← Back to Products
-          </SecondaryButton>
+          </button>
         </ErrorMessage>
       </PageWrapper>
     );
   }
 
+  const productImages = product.images && product.images.length > 0 ? product.images : [{ url: '', alt: product.title }];
+
   return (
     <PageWrapper>
       <BackButton to="/products">
-        ← Back to Products
+        ← Back to Marketplace
       </BackButton>
 
       <ProductContainer
@@ -478,197 +594,176 @@ const ProductDetailPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <ImageSection>
-          <MainImage
-            bgImage={product.images?.[selectedImageIndex]?.url}
-            key={selectedImageIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {!product.images?.[selectedImageIndex]?.url && (
-              <span>📦 {product.title}</span>
+        <LeftSection>
+          <ImageGallery>
+            <MainImageContainer>
+              <MainImage 
+                bgImage={productImages[selectedImageIndex]?.url}
+                key={selectedImageIndex}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ImageOverlay />
+                <ProductTypeTag>
+                  {getProductTypeTag(product.category)}
+                </ProductTypeTag>
+                {!productImages[selectedImageIndex]?.url && (
+                  <span>📦 {product.title}</span>
+                )}
+              </MainImage>
+            </MainImageContainer>
+            
+            {productImages.length > 1 && (
+              <ThumbnailGrid>
+                {productImages.map((image, index) => (
+                  <Thumbnail
+                    key={index}
+                    bgImage={image.url}
+                    active={selectedImageIndex === index}
+                    onClick={() => setSelectedImageIndex(index)}
+                  />
+                ))}
+              </ThumbnailGrid>
             )}
-          </MainImage>
-          
-          {product.images && product.images.length > 1 && (
-            <ThumbnailGrid>
-              {product.images.map((image, index) => (
-                <Thumbnail
-                  key={index}
-                  bgImage={image.url}
-                  active={index === selectedImageIndex}
-                  onClick={() => setSelectedImageIndex(index)}
-                />
-              ))}
-            </ThumbnailGrid>
+          </ImageGallery>
+
+          {product.demoUrl && (
+            <DemoButton
+              href={product.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              🌐 View Live Demo
+            </DemoButton>
           )}
-        </ImageSection>
+        </LeftSection>
 
-        <ProductInfo>
-          <ProductBadges>
-            {product.isFeatured && <Badge type="featured">Featured</Badge>}
-            {isNew(product.createdAt) && !product.isFeatured && <Badge type="new">New</Badge>}
-            {hasDiscount(product) && <Badge type="sale">{getDiscountPercentage(product)}% Off</Badge>}
-          </ProductBadges>
+        <RightSection>
+          <ProductHeader>
+            <ProductBadges>
+              {product.isFeatured && <Badge type="featured">Featured</Badge>}
+              {isNew(product.createdAt) && <Badge type="new">New</Badge>}
+              {hasDiscount(product) && <Badge type="sale">Sale</Badge>}
+              {(product.rating?.count || 0) > 50 && <Badge type="popular">Popular</Badge>}
+            </ProductBadges>
 
-          <ProductTitle
-            initial={{ opacity: 0, x: 20 }}
+            <ProductTitle
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {product.title}
+            </ProductTitle>
+
+            <ProductMeta>
+              <Category>{product.category}</Category>
+              <Rating>
+                <Stars>
+                  {renderStars(Math.floor(product.rating?.average || 0))}
+                </Stars>
+                <RatingText>
+                  {product.rating?.average?.toFixed(1) || '0.0'} ({product.rating?.count || 0} reviews)
+                </RatingText>
+              </Rating>
+            </ProductMeta>
+          </ProductHeader>
+
+          <PriceSection
+            initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
-            {product.title}
-          </ProductTitle>
-
-          <ProductMeta>
-            <Category>{product.category}</Category>
-            <Rating>
-              <Stars>{renderStars(Math.floor(product.rating?.average || 0))}</Stars>
-              <RatingText>
-                {product.rating?.average?.toFixed(1)} ({product.rating?.count} reviews)
-              </RatingText>
-            </Rating>
-          </ProductMeta>
-
-          <PriceSection>
-            <PriceRow>
+            <PriceContainer>
               <CurrentPrice>{formatPrice(product.price)}</CurrentPrice>
               {hasDiscount(product) && (
                 <>
                   <OriginalPrice>{formatPrice(product.originalPrice!)}</OriginalPrice>
-                  <Discount>Save {getDiscountPercentage(product)}%</Discount>
+                  <Savings>
+                    Save ${(product.originalPrice! - product.price).toFixed(2)}
+                  </Savings>
                 </>
               )}
-            </PriceRow>
+            </PriceContainer>
+            <PriceNote>{product.price === 0 ? 'Free Product' : 'One-time purchase'}</PriceNote>
+            <CustomizationNote>
+              💡 <strong>Fully Customizable</strong> – Our team can customize this solution to meet your specific needs and requirements.
+            </CustomizationNote>
           </PriceSection>
 
-          <Description>
-            <ShortDescription>{product.shortDescription}</ShortDescription>
-          </Description>
-
-          <ActionButtons>
-            <AddToCartButton
+          <ActionButtonsContainer>
+            <ActionButton
+              variant="primary"
               onClick={handleAddToCart}
+              disabled={isAddingToCart}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              🛒 Add to Cart
-            </AddToCartButton>
-            {product.demoUrl && (
-              <SecondaryButton
-                as="a"
-                href={product.demoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                👀 View Demo
-              </SecondaryButton>
-            )}
-          </ActionButtons>
-
-          <QuickInfo>
-            <InfoItem>
-              <InfoLabel>Delivery Time</InfoLabel>
-              <InfoValue>{product.deliveryTime}</InfoValue>
-            </InfoItem>
-            <InfoItem>
-              <InfoLabel>Support Duration</InfoLabel>
-              <InfoValue>{product.supportDuration}</InfoValue>
-            </InfoItem>
-            <InfoItem>
-              <InfoLabel>Difficulty Level</InfoLabel>
-              <InfoValue>{product.difficulty}</InfoValue>
-            </InfoItem>
-            <InfoItem>
-              <InfoLabel>Total Sales</InfoLabel>
-              <InfoValue>{product.sales}+ sold</InfoValue>
-            </InfoItem>
-          </QuickInfo>
-        </ProductInfo>
+              {isAddingToCart ? '⏳ Adding...' : '🛒 Add to Cart'}
+            </ActionButton>
+            <ActionButton
+              variant="secondary"
+              onClick={() => {
+                // Contact logic will be implemented
+                window.location.href = '/hire';
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              💬 Contact Us
+            </ActionButton>
+          </ActionButtonsContainer>
+        </RightSection>
       </ProductContainer>
 
-      <TabsSection>
-        <TabsList>
-          <Tab
-            active={activeTab === 'features'}
-            onClick={() => setActiveTab('features')}
-          >
-            Features
-          </Tab>
-          <Tab
-            active={activeTab === 'description'}
-            onClick={() => setActiveTab('description')}
-          >
-            Description
-          </Tab>
-          <Tab
-            active={activeTab === 'technologies'}
-            onClick={() => setActiveTab('technologies')}
-          >
-            Technologies
-          </Tab>
-          {product.customizationOptions?.available && (
-            <Tab
-              active={activeTab === 'customization'}
-              onClick={() => setActiveTab('customization')}
-            >
-              Customization
-            </Tab>
-          )}
-        </TabsList>
+      <DescriptionSection>
+        <SectionTitle>📝 Product Description</SectionTitle>
+        <DescriptionText
+          dangerouslySetInnerHTML={{ 
+            __html: product.description || product.shortDescription || 'No description available.' 
+          }}
+        />
+      </DescriptionSection>
 
-        <AnimatePresence mode="wait">
-          <TabContent
-            key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {activeTab === 'features' && (
-              <FeaturesList>
-                {product.features?.map((feature, index) => (
-                  <FeatureItem key={index} included={feature.included}>
-                    <FeatureIcon included={feature.included}>
-                      {feature.included ? '✓' : '✗'}
-                    </FeatureIcon>
-                    <div>
-                      <h4>{feature.title}</h4>
-                      {feature.description && <p>{feature.description}</p>}
-                    </div>
-                  </FeatureItem>
-                ))}
-              </FeaturesList>
+      <FeaturesGrid>
+        <FeatureCard>
+          <SectionTitle>✨ Key Features</SectionTitle>
+          <FeatureList>
+            {product.features && product.features.length > 0 ? (
+              product.features.map((feature, index) => (
+                <FeatureItem key={index}>{String(feature)}</FeatureItem>
+              ))
+            ) : (
+              <>
+                <FeatureItem>Modern and responsive design</FeatureItem>
+                <FeatureItem>Cross-platform compatibility</FeatureItem>
+                <FeatureItem>Professional code quality</FeatureItem>
+                <FeatureItem>Full documentation included</FeatureItem>
+                <FeatureItem>Free support and updates</FeatureItem>
+              </>
             )}
+          </FeatureList>
+        </FeatureCard>
 
-            {activeTab === 'description' && (
-              <FullDescription>{product.description}</FullDescription>
+        <FeatureCard>
+          <SectionTitle>⚙️ Technologies Used</SectionTitle>
+          <TechStack>
+            {product.technologies && product.technologies.length > 0 ? (
+              product.technologies.map((tech, index) => (
+                <TechTag key={index}>{tech}</TechTag>
+              ))
+            ) : (
+              <>
+                <TechTag>React</TechTag>
+                <TechTag>TypeScript</TechTag>
+                <TechTag>Node.js</TechTag>
+                <TechTag>MongoDB</TechTag>
+                <TechTag>Express.js</TechTag>
+              </>
             )}
-
-            {activeTab === 'technologies' && (
-              <TechTags>
-                {product.technologies?.map((tech, index) => (
-                  <TechTag key={index}>{tech}</TechTag>
-                ))}
-              </TechTags>
-            )}
-
-            {activeTab === 'customization' && product.customizationOptions?.available && (
-              <div>
-                <h3>Customization Options</h3>
-                <p>{product.customizationOptions.description}</p>
-                {product.customizationOptions.additionalCost > 0 && (
-                  <p>
-                    <strong>Additional Cost:</strong> {formatPrice(product.customizationOptions.additionalCost)}
-                  </p>
-                )}
-              </div>
-            )}
-          </TabContent>
-        </AnimatePresence>
-      </TabsSection>
+          </TechStack>
+        </FeatureCard>
+      </FeaturesGrid>
     </PageWrapper>
   );
 };

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 // Icons replaced with emojis for compatibility
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import ThemeSelector from '../common/ThemeSelector';
 
 const HeaderWrapper = styled.header`
   position: fixed;
@@ -55,7 +56,7 @@ const NavLinks = styled.div`
 const NavLink = styled(Link)`
   color: ${props => props.theme.colors.text.secondary};
   font-weight: ${props => props.theme.fonts.weights.medium};
-  transition: ${props => props.theme.transitions.colors};
+  transition: ${props => props.theme.transitions.all};
 
   &:hover {
     color: ${props => props.theme.colors.primary.main};
@@ -159,7 +160,7 @@ const DropdownItem = styled(Link)`
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
   color: ${props => props.theme.colors.text.secondary};
   border-bottom: 1px solid ${props => props.theme.colors.border.light};
-  transition: ${props => props.theme.transitions.colors};
+  transition: ${props => props.theme.transitions.all};
 
   &:last-child {
     border-bottom: none;
@@ -180,7 +181,7 @@ const LogoutButton = styled.button`
   color: ${props => props.theme.colors.error.main};
   background: transparent;
   border: none;
-  transition: ${props => props.theme.transitions.colors};
+  transition: ${props => props.theme.transitions.all};
 
   &:hover {
     background: ${props => props.theme.colors.background.secondary};
@@ -226,6 +227,8 @@ const Header: React.FC = () => {
           </NavLinks>
 
           <UserActions>
+            <ThemeSelector />
+            
             <CartButton to="/cart">
               🛍️
               <span className="hide-mobile">Cart</span>

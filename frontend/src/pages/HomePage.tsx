@@ -14,6 +14,9 @@ const float = keyframes`
 
 const HomeWrapper = styled.div`
   width: 100%;
+  background: ${props => props.theme.colors.background.primary};
+  color: ${props => props.theme.colors.text.primary};
+  min-height: 100vh;
 `;
 
 // Hero Section
@@ -132,7 +135,8 @@ const HeroVisual = styled(motion.div)`
 `;
 
 const FloatingCard = styled(motion.div)<{ delay?: number }>`
-  background: white;
+  background: ${props => props.theme.colors.background.paper};
+  border: 1px solid ${props => props.theme.colors.border.light};
   border-radius: ${props => props.theme.borderRadius.xl};
   padding: ${props => props.theme.spacing.lg};
   box-shadow: ${props => props.theme.shadows.xl};
@@ -216,6 +220,7 @@ const FeatureDescription = styled.p`
 // Categories Section
 const CategoriesSection = styled.section`
   padding: ${props => props.theme.spacing['6xl']} 0;
+  background: ${props => props.theme.colors.background.secondary};
 `;
 
 const CategoriesGrid = styled.div`
@@ -225,16 +230,20 @@ const CategoriesGrid = styled.div`
 `;
 
 const CategoryCard = styled(motion.div)`
-  background: white;
+  background: ${props => props.theme.colors.background.paper};
+  border: 1px solid ${props => props.theme.colors.border.light};
   border-radius: ${props => props.theme.borderRadius.xl};
   overflow: hidden;
   box-shadow: ${props => props.theme.shadows.md};
   transition: ${props => props.theme.transitions.all};
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 
   &:hover {
     transform: translateY(-5px);
     box-shadow: ${props => props.theme.shadows.xl};
+    border-color: ${props => props.theme.colors.primary.main};
   }
 `;
 
@@ -252,15 +261,24 @@ const CategoryContent = styled.div`
   padding: ${props => props.theme.spacing.xl};
 `;
 
+const CategoryCount = styled.div`
+  color: ${props => props.theme.colors.primary.main};
+  font-size: ${props => props.theme.fonts.sizes.sm};
+  font-weight: ${props => props.theme.fonts.weights.semibold};
+  margin-top: ${props => props.theme.spacing.sm};
+`;
+
 const CategoryTitle = styled.h3`
   font-size: ${props => props.theme.fonts.sizes.lg};
   font-weight: ${props => props.theme.fonts.weights.semibold};
   margin-bottom: ${props => props.theme.spacing.sm};
+  color: ${props => props.theme.colors.text.primary};
 `;
 
 const CategoryDescription = styled.p`
   color: ${props => props.theme.colors.text.secondary};
   font-size: ${props => props.theme.fonts.sizes.sm};
+  line-height: 1.5;
 `;
 
 // Testimonials Section
@@ -280,7 +298,8 @@ const TestimonialsTrack = styled(motion.div)`
 `;
 
 const TestimonialCard = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.background.paper};
+  border: 1px solid ${props => props.theme.colors.border.light};
   padding: ${props => props.theme.spacing['2xl']};
   border-radius: ${props => props.theme.borderRadius.xl};
   box-shadow: ${props => props.theme.shadows.md};
@@ -373,27 +392,45 @@ const HomePage: React.FC = () => {
   const categories = [
     {
       title: "Web Applications",
-      description: "Full-stack web solutions",
+      description: "Full-stack web solutions & websites",
       color: "#667eea",
-      icon: "💻"
+      icon: "💻",
+      count: "8+ products"
     },
     {
       title: "Mobile Apps",
       description: "iOS & Android applications",
-      color: "#f093fb",
-      icon: "📱"
+      color: "#f093fb", 
+      icon: "📱",
+      count: "3+ products"
     },
     {
       title: "E-commerce",
-      description: "Online store solutions",
+      description: "Online store & marketplace solutions",
       color: "#4facfe",
-      icon: "🛒"
+      icon: "🛒",
+      count: "3+ products"
     },
     {
       title: "UI/UX Design",
-      description: "Beautiful user interfaces",
+      description: "Beautiful design templates & kits",
       color: "#43e97b",
-      icon: "🎨"
+      icon: "🎨",
+      count: "3+ products"
+    },
+    {
+      title: "Backend APIs",
+      description: "Server-side solutions & microservices",
+      color: "#ff6b6b",
+      icon: "⚡",
+      count: "3+ products"
+    },
+    {
+      title: "Custom Development",
+      description: "Tailored solutions for your needs",
+      color: "#9c88ff",
+      icon: "⚙️",
+      count: "Available"
     }
   ];
 
@@ -521,6 +558,8 @@ const HomePage: React.FC = () => {
             {categories.map((category, index) => (
               <CategoryCard
                 key={index}
+                as={Link}
+                to={`/products?category=${encodeURIComponent(category.title)}`}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -534,6 +573,7 @@ const HomePage: React.FC = () => {
                 <CategoryContent>
                   <CategoryTitle>{category.title}</CategoryTitle>
                   <CategoryDescription>{category.description}</CategoryDescription>
+                  <CategoryCount>{category.count}</CategoryCount>
                 </CategoryContent>
               </CategoryCard>
             ))}

@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Product, ProductFilters } from '../types';
 import { apiService } from '../services/api';
+import SimpleProductTest from '../components/SimpleProductTest';
+
 
 // Styled Components
 const PageWrapper = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   padding: ${props => props.theme.spacing.xl};
+  background: ${props => props.theme.colors.background.primary};
+  min-height: 100vh;
+  color: ${props => props.theme.colors.text.primary};
 `;
 
 const Header = styled.div`
@@ -57,12 +62,18 @@ const SearchInput = styled.input`
   border: 2px solid ${props => props.theme.colors.border.light};
   border-radius: ${props => props.theme.borderRadius.lg};
   font-size: ${props => props.theme.fonts.sizes.body};
-  transition: all 0.3s ease;
+  background: ${props => props.theme.colors.background.paper};
+  color: ${props => props.theme.colors.text.primary};
+  transition: ${props => props.theme.transitions.all};
   
   &:focus {
     outline: none;
     border-color: ${props => props.theme.colors.primary.main};
     box-shadow: 0 0 0 3px ${props => props.theme.colors.primary.main}20;
+  }
+  
+  &::placeholder {
+    color: ${props => props.theme.colors.text.muted};
   }
 `;
 
@@ -80,9 +91,10 @@ const FilterDropdown = styled.select`
   border: 2px solid ${props => props.theme.colors.border.light};
   border-radius: ${props => props.theme.borderRadius.md};
   font-size: ${props => props.theme.fonts.sizes.body};
-  background: white;
+  background: ${props => props.theme.colors.background.paper};
+  color: ${props => props.theme.colors.text.primary};
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: ${props => props.theme.transitions.all};
   
   &:focus {
     outline: none;
@@ -110,16 +122,18 @@ const ProductGrid = styled(motion.div)`
 `;
 
 const ProductCard = styled(motion.div)`
-  background: white;
+  background: ${props => props.theme.colors.background.paper};
+  border: 1px solid ${props => props.theme.colors.border.light};
   border-radius: ${props => props.theme.borderRadius.lg};
-  box-shadow: ${props => props.theme.shadows.sm};
+  box-shadow: ${props => props.theme.shadows.md};
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: ${props => props.theme.transitions.all};
   cursor: pointer;
   
   &:hover {
     transform: translateY(-8px);
-    box-shadow: ${props => props.theme.shadows.lg};
+    box-shadow: ${props => props.theme.shadows.xl};
+    border-color: ${props => props.theme.colors.primary.main};
   }
 `;
 
@@ -202,6 +216,19 @@ const ProductCategory = styled.span`
   font-weight: ${props => props.theme.fonts.weights.medium};
 `;
 
+const ProductTypeTag = styled.div`
+  position: absolute;
+  top: ${props => props.theme.spacing.sm};
+  left: ${props => props.theme.spacing.sm};
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  font-size: 0.75rem;
+  font-weight: ${props => props.theme.fonts.weights.medium};
+  text-transform: uppercase;
+`;
+
 const ProductRating = styled.div`
   display: flex;
   align-items: center;
@@ -244,38 +271,84 @@ const Tag = styled.span`
   border-radius: ${props => props.theme.borderRadius.sm};
 `;
 
-const ViewButton = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
+const ActionButtons = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing.sm};
+  margin-top: ${props => props.theme.spacing.sm};
+`;
+
+const ActionButton = styled.button<{ variant?: 'primary' | 'secondary' | 'outline' }>`
+  flex: 1;
   padding: ${props => props.theme.spacing.sm};
-  background: ${props => props.theme.colors.primary.main};
-  color: white;
-  text-decoration: none;
-  border-radius: ${props => props.theme.borderRadius.md};
+  border: 2px solid ${props => {
+    switch (props.variant) {
+      case 'primary': return props.theme.colors.primary.main;
+      case 'secondary': return props.theme.colors.secondary.main;
+      case 'outline': return props.theme.colors.border.main;
+      default: return props.theme.colors.primary.main;
+    }
+  }};
+  background: ${props => {
+    switch (props.variant) {
+      case 'primary': return props.theme.colors.primary.main;
+      case 'secondary': return props.theme.colors.secondary.main;
+      case 'outline': return 'transparent';
+      default: return props.theme.colors.primary.main;
+    }
+  }};
+  color: ${props => {
+    switch (props.variant) {
+      case 'outline': return props.theme.colors.text.primary;
+      default: return 'white';
+    }
+  }};
+  border-radius: ${props => props.theme.borderRadius.sm};
+  font-size: ${props => props.theme.fonts.sizes.sm};
   font-weight: ${props => props.theme.fonts.weights.medium};
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: ${props => props.theme.transitions.all};
   
   &:hover {
-    background: ${props => props.theme.colors.primary.dark};
-    transform: translateY(-2px);
+    opacity: 0.8;
+    transform: translateY(-1px);
   }
 `;
 
+
+
 const LoadingSpinner = styled(motion.div)`
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200px;
-  font-size: ${props => props.theme.fonts.sizes.lg};
-  color: ${props => props.theme.colors.text.secondary};
+  height: 400px;
+  font-size: ${props => props.theme.fonts.sizes.xl};
+  color: ${props => props.theme.colors.text.primary};
+  background: ${props => props.theme.colors.background.paper};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  margin: ${props => props.theme.spacing.xl} 0;
+  border: 2px solid ${props => props.theme.colors.border.light};
 `;
 
 const EmptyState = styled(motion.div)`
   text-align: center;
-  padding: ${props => props.theme.spacing.xl};
-  color: ${props => props.theme.colors.text.secondary};
+  padding: ${props => props.theme.spacing['2xl']};
+  color: ${props => props.theme.colors.text.primary};
+  background: ${props => props.theme.colors.background.paper};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  border: 2px solid ${props => props.theme.colors.border.light};
+  margin: ${props => props.theme.spacing.xl} 0;
+  
+  h3 {
+    color: ${props => props.theme.colors.text.primary};
+    margin-bottom: ${props => props.theme.spacing.md};
+    font-size: ${props => props.theme.fonts.sizes['2xl']};
+  }
+  
+  p {
+    color: ${props => props.theme.colors.text.secondary};
+    font-size: ${props => props.theme.fonts.sizes.lg};
+  }
 `;
 
 const Pagination = styled.div`
@@ -289,11 +362,11 @@ const Pagination = styled.div`
 const PageButton = styled.button<{ active?: boolean }>`
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
   border: 1px solid ${props => props.theme.colors.border.light};
-  background: ${props => props.active ? props.theme.colors.primary.main : 'white'};
+  background: ${props => props.active ? props.theme.colors.primary.main : props.theme.colors.background.paper};
   color: ${props => props.active ? 'white' : props.theme.colors.text.primary};
   border-radius: ${props => props.theme.borderRadius.md};
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: ${props => props.theme.transitions.all};
   
   &:hover {
     background: ${props => props.active ? props.theme.colors.primary.dark : props.theme.colors.background.secondary};
@@ -307,15 +380,29 @@ const PageButton = styled.button<{ active?: boolean }>`
 
 // Main Component
 const ProductsPage: React.FC = () => {
+  const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<ProductFilters>({
-    search: '',
-    category: '',
-    sort: 'newest',
-    page: 1,
-    limit: 12,
-  });
+  
+  // Initialize filters from URL params
+  const getInitialFilters = (): ProductFilters => {
+    const searchParams = new URLSearchParams(location.search);
+    const sortParam = searchParams.get('sort') || 'newest';
+    const validSort = ['newest', 'price_low', 'price_high', 'rating', 'popular'].includes(sortParam) 
+      ? sortParam as 'newest' | 'price_low' | 'price_high' | 'rating' | 'popular'
+      : 'newest';
+    
+    return {
+      search: searchParams.get('search') || '',
+      category: searchParams.get('category') || '',
+      sort: validSort,
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: parseInt(searchParams.get('limit') || '12'),
+    };
+  };
+  
+  const [filters, setFilters] = useState<ProductFilters>(getInitialFilters);
+
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -344,13 +431,22 @@ const ProductsPage: React.FC = () => {
     { value: 'popular', label: 'Most Popular' },
   ];
 
+  // Initialize from URL params on component mount
+  useEffect(() => {
+    const initialFilters = getInitialFilters();
+    setFilters(initialFilters);
+  }, [location.search]);
+  
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      console.log('Fetching products with filters:', filters);
+      
       const params = new URLSearchParams();
       
       Object.entries(filters).forEach(([key, value]) => {
@@ -362,11 +458,28 @@ const ProductsPage: React.FC = () => {
       if (filters.category && filters.category !== 'All') {
         params.append('category', filters.category);
       }
-
+      
+      console.log('API request params:', Object.fromEntries(params.entries()));
       const response = await apiService.products.getAll(params.toString() ? Object.fromEntries(params.entries()) : {});
+      
+      console.log('API response:', response.data);
+      
       if (response.data.success) {
-        setProducts(response.data.data.products);
-        setPagination(response.data.data.pagination);
+        const products = response.data.data.products || [];
+        const pagination = response.data.data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalProducts: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+        };
+        
+        console.log(`Loaded ${products.length} products`);
+        setProducts(products);
+        setPagination(pagination);
+      } else {
+        console.error('API request failed:', response.data);
+        setProducts([]);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -411,6 +524,21 @@ const ProductsPage: React.FC = () => {
 
   const hasDiscount = (product: Product) => {
     return product.originalPrice && product.originalPrice > product.price;
+  };
+
+  const getProductTypeTag = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'Web Applications': 'Website',
+      'Mobile Apps': 'App',
+      'E-commerce': 'Store',
+      'Landing Pages': 'Landing',
+      'Backend APIs': 'API',
+      'UI/UX Design': 'Design',
+      'Custom Development': 'Service',
+      'Consulting': 'Service',
+      'AI Agent': 'AI Agent',
+    };
+    return categoryMap[category] || 'Product';
   };
 
   return (
@@ -465,6 +593,9 @@ const ProductsPage: React.FC = () => {
           ))}
         </SortDropdown>
       </FilterSection>
+      
+      {/* Simple Test Component */}
+      <SimpleProductTest />
 
       <ResultsInfo>
         <span>
@@ -481,15 +612,19 @@ const ProductsPage: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          Loading amazing products... ⏳
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🛍️</div>
+          <div>Loading amazing products...</div>
+          <div style={{ fontSize: '1rem', marginTop: '0.5rem', opacity: 0.7 }}>Discovering the best digital solutions for you</div>
         </LoadingSpinner>
       ) : products.length === 0 ? (
         <EmptyState
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔍</div>
           <h3>No products found</h3>
           <p>Try adjusting your search or filters to find what you're looking for.</p>
+          <p style={{ marginTop: '1rem', fontSize: '0.9rem', opacity: 0.7 }}>💡 Tip: Try searching by category or browse all products</p>
         </EmptyState>
       ) : (
         <>
@@ -515,6 +650,9 @@ const ProductsPage: React.FC = () => {
                     {!product.images?.[0]?.url && (
                       <span>📦 {product.title}</span>
                     )}
+                    <ProductTypeTag>
+                      {getProductTypeTag(product.category)}
+                    </ProductTypeTag>
                     {product.isFeatured && <ProductBadge type="featured">Featured</ProductBadge>}
                     {isNew(product.createdAt) && !product.isFeatured && <ProductBadge type="new">New</ProductBadge>}
                     {hasDiscount(product) && !product.isFeatured && !isNew(product.createdAt) && (
@@ -550,9 +688,30 @@ const ProductsPage: React.FC = () => {
                       </ProductTags>
                     )}
 
-                    <ViewButton to={`/products/${product._id}`}>
-                      View Details →
-                    </ViewButton>
+                    <ActionButtons>
+                      <ActionButton 
+                        variant="outline" 
+                        onClick={() => window.open(product.demoUrl || '#', '_blank')}
+                        disabled={!product.demoUrl}
+                      >
+                        🌐 Demo
+                      </ActionButton>
+                      <ActionButton 
+                        variant="secondary" 
+                        onClick={() => {
+                          // Add to cart logic will be implemented
+                          console.log('Add to cart:', product._id);
+                        }}
+                      >
+                        🛒 Cart
+                      </ActionButton>
+                      <ActionButton 
+                        variant="primary" 
+                        onClick={() => window.location.href = `/products/${product._id}`}
+                      >
+                        👁️ Details
+                      </ActionButton>
+                    </ActionButtons>
                   </ProductInfo>
                 </ProductCard>
               ))}

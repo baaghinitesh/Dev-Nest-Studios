@@ -47,7 +47,7 @@ const FooterLinks = styled.div`
 const FooterLink = styled(Link)`
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  transition: ${props => props.theme.transitions.colors};
+  transition: ${props => props.theme.transitions.all};
 
   &:hover {
     color: ${props => props.theme.colors.primary.light};
@@ -126,7 +126,7 @@ const LegalLinks = styled.div`
   a {
     color: rgba(255, 255, 255, 0.6);
     text-decoration: none;
-    transition: ${props => props.theme.transitions.colors};
+    transition: ${props => props.theme.transitions.all};
 
     &:hover {
       color: ${props => props.theme.colors.primary.light};

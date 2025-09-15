@@ -89,7 +89,7 @@ const ServiceDescription = styled.p`
 
 const ServicePrice = styled.div`
   font-weight: bold;
-  color: ${props => props.theme.colors.accent};
+  color: ${props => props.theme.colors.primary.main};
   font-size: 1.1rem;
 `;
 
@@ -132,7 +132,7 @@ const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.accent};
+    border-color: ${props => props.theme.colors.primary.main};
     background: rgba(255, 255, 255, 0.15);
   }
 `;
@@ -147,7 +147,7 @@ const Select = styled.select`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.accent};
+    border-color: ${props => props.theme.colors.primary.main};
     background: rgba(255, 255, 255, 0.15);
   }
 
@@ -173,13 +173,13 @@ const Textarea = styled.textarea`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.accent};
+    border-color: ${props => props.theme.colors.primary.main};
     background: rgba(255, 255, 255, 0.15);
   }
 `;
 
 const SubmitButton = styled(motion.button)`
-  background: ${props => props.theme.colors.accent};
+  background: ${props => props.theme.colors.primary.main};
   color: white;
   border: none;
   padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.xl};
@@ -190,7 +190,7 @@ const SubmitButton = styled(motion.button)`
   transition: all 0.3s ease;
 
   &:hover {
-    background: ${props => props.theme.colors.accentHover || '#e55a4f'};
+    background: ${props => props.theme.colors.primary.dark};
     transform: translateY(-2px);
   }
 
@@ -227,7 +227,7 @@ const StepNumber = styled.div`
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: ${props => props.theme.colors.accent};
+  background: ${props => props.theme.colors.primary.main};
   color: white;
   display: flex;
   align-items: center;

@@ -1,15 +1,97 @@
 // Base theme structure
 interface BaseTheme {
-  fonts: any;
-  spacing: any;
-  borderRadius: any;
-  shadows: any;
-  breakpoints: any;
-  zIndex: any;
-  transitions: any;
+  fonts: {
+    primary: string;
+    secondary: string;
+    mono: string;
+    sizes: Record<string, string>;
+    weights: Record<string, number>;
+    lineHeights: Record<string, number>;
+  };
+  spacing: Record<string, string>;
+  borderRadius: Record<string, string>;
+  shadows: Record<string, string>;
+  breakpoints: Record<string, string>;
+  zIndex: Record<string, string | number>;
+  transitions: {
+    fast: string;
+    normal: string;
+    slow: string;
+    colors: string;
+    transform: string;
+    opacity: string;
+    shadow: string;
+    all: string;
+  };
   maxWidth: string;
-  layout: any;
-  components: any;
+  layout: Record<string, string>;
+  components: Record<string, any>;
+}
+
+// Colors interface for better type safety
+interface ThemeColors {
+  primary: {
+    light: string;
+    main: string;
+    dark: string;
+    darker: string;
+  };
+  secondary: {
+    light: string;
+    main: string;
+    dark: string;
+  };
+  success: {
+    light: string;
+    main: string;
+    dark: string;
+  };
+  warning: {
+    light: string;
+    main: string;
+    dark: string;
+  };
+  error: {
+    light: string;
+    main: string;
+    dark: string;
+  };
+  info: {
+    light: string;
+    main: string;
+    dark: string;
+  };
+  text: {
+    primary: string;
+    secondary: string;
+    muted: string;
+    disabled: string;
+    inverse: string;
+  };
+  background: {
+    primary: string;
+    secondary: string;
+    tertiary: string;
+    dark: string;
+    overlay: string;
+    light: string;
+    paper: string;
+  };
+  border: {
+    light: string;
+    main: string;
+    dark: string;
+    primary: string;
+  };
+  accent: string;
+  accentHover: string;
+  gradients: {
+    primary: string;
+    secondary: string;
+    success: string;
+    dark: string;
+    hero: string;
+  };
 }
 
 // Theme variants
@@ -580,4 +662,4 @@ export const completeThemes = {
 export const theme = completeThemes.light;
 
 export type ThemeMode = keyof typeof completeThemes;
-export type Theme = typeof theme;
+export type Theme = typeof theme & { colors: ThemeColors };
