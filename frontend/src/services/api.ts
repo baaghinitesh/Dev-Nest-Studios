@@ -1,7 +1,8 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 // API base configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Use relative URLs when running with proxy, fallback to direct URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Create axios instance
 const api = axios.create({

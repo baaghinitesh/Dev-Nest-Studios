@@ -10,6 +10,7 @@ const SimpleProductTest: React.FC = () => {
     const fetchData = async () => {
       try {
         console.log('SimpleProductTest: Starting fetch...');
+        console.log('SimpleProductTest: API base URL check');
         const response = await apiService.products.getAll({ limit: 5 });
         console.log('SimpleProductTest: Response received:', response.data);
         
