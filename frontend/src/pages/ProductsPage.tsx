@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Product, ProductFilters } from '../types';
 import { apiService } from '../services/api';
-import SimpleProductTest from '../components/SimpleProductTest';
+
+
+
 
 
 // Styled Components
@@ -384,6 +386,8 @@ const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
+
+  
   // Initialize filters from URL params
   const getInitialFilters = (): ProductFilters => {
     const searchParams = new URLSearchParams(location.search);
@@ -435,34 +439,44 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     const initialFilters = getInitialFilters();
     setFilters(initialFilters);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
   
   useEffect(() => {
+
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
+  
+
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      console.log('Fetching products with filters:', filters);
       
-      const params = new URLSearchParams();
+      // Build params more simply - only include non-empty values
+      const apiParams: any = {};
       
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && key !== 'category') {
-          params.append(key, value.toString());
-        }
-      });
-      
-      if (filters.category && filters.category !== 'All') {
-        params.append('category', filters.category);
+      if (filters.search && filters.search.trim()) {
+        apiParams.search = filters.search.trim();
+      }
+      if (filters.category && filters.category !== 'All' && filters.category !== '') {
+        apiParams.category = filters.category;
+      }
+      if (filters.sort) {
+        apiParams.sort = filters.sort;
+      }
+      if (filters.page && filters.page > 1) {
+        apiParams.page = filters.page;
+      }
+      if (filters.limit) {
+        apiParams.limit = filters.limit;
       }
       
-      console.log('API request params:', Object.fromEntries(params.entries()));
-      const response = await apiService.products.getAll(params.toString() ? Object.fromEntries(params.entries()) : {});
+
+      const response = await apiService.products.getAll(apiParams);
       
-      console.log('API response:', response.data);
+
       
       if (response.data.success) {
         const products = response.data.data.products || [];
@@ -474,18 +488,19 @@ const ProductsPage: React.FC = () => {
           hasPrevPage: false,
         };
         
-        console.log(`Loaded ${products.length} products`);
+
         setProducts(products);
         setPagination(pagination);
       } else {
-        console.error('API request failed:', response.data);
+
         setProducts([]);
       }
-    } catch (error) {
-      console.error('Error fetching products:', error);
+    } catch (error: any) {
+
       setProducts([]);
     } finally {
       setLoading(false);
+
     }
   };
 
@@ -543,6 +558,8 @@ const ProductsPage: React.FC = () => {
 
   return (
     <PageWrapper>
+
+
       <Header>
         <Title
           initial={{ opacity: 0, y: 30 }}
@@ -593,9 +610,7 @@ const ProductsPage: React.FC = () => {
           ))}
         </SortDropdown>
       </FilterSection>
-      
-      {/* Simple Test Component */}
-      <SimpleProductTest />
+
 
       <ResultsInfo>
         <span>
@@ -606,6 +621,8 @@ const ProductsPage: React.FC = () => {
           Page {pagination.currentPage} of {pagination.totalPages}
         </span>
       </ResultsInfo>
+
+
 
       {loading ? (
         <LoadingSpinner
