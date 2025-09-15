@@ -1,0 +1,1 @@
+import React from 'react'; const AuthSuccessPage: React.FC = () => <div style={{padding: '2rem', textAlign: 'center'}}><h1>AuthSuccessPage</h1><p>Coming soon...</p></div>; export default AuthSuccessPage;
